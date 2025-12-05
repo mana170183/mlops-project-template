@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineEndpoint.schema.json
-name: taxi-fare-online
-description: taxi cost online endpoint
+$schema: https://azuremlschemas.azureedge.net/latest/onlineEndpoint.schema.json
+name: taxi-online-devtmlopspocmtsprod
 auth_mode: key
+traffic:
+  taxi-online-dp: 100
