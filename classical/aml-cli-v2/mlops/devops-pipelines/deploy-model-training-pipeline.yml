@@ -1,14 +1,12 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft Corporation.  All rights reserved.
 # Licensed under the MIT License.
 
 name: deploy-model-training-pipeline
 
 variables:
   - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
-      # 'main' branch: PRD environment
       - template: ../../config-infra-prod.yml
   - ${{ if ne(variables['Build.SourceBranchName'], 'main') }}:
-      # 'develop' or feature branches: DEV environment
       - template: ../../config-infra-dev.yml
   - name: version
     value: aml-cli-v2
@@ -16,12 +14,12 @@ variables:
 trigger: none
 
 pool:
-  vmImage: ubuntu-20.04
+  vmImage: ubuntu-latest
 
 resources:
   repositories:
-    - repository: mlops-templates # Template Repo
-      name: mlops-templates
+    - repository: mlops-templates
+      name: mlops-v2/mlops-templates
       type: git
       ref: main
 
@@ -30,7 +28,7 @@ stages:
     displayName: Deploy Training Pipeline
     jobs:
       - job: DeployTrainingPipeline
-        timeoutInMinutes: 120 # how long to run the job before automatically cancelling
+        timeoutInMinutes: 360
         steps:
           - checkout: self
             path: s/
@@ -40,12 +38,12 @@ stages:
               targetType: "inline"
               script: |
                 set -e
-                mkdir "$(Build.Repository.Name)"
-                mkdir "mlops-templates"
+                mkdir -p "$(Build.Repository.Name)"
+                mkdir -p "mlops-templates"
           - checkout: mlops-templates
             path: s/templates/
           - template: templates/${{ variables.version }}/install-az-cli.yml@mlops-templates
-          - template: templates/${{ variables.version }}/install-aml-cli.yml@mlops-templates
+          - template: templates/${{ variables. version }}/install-aml-cli.yml@mlops-templates
           - template: templates/${{ variables.version }}/connect-to-workspace.yml@mlops-templates
           - template: templates/${{ variables.version }}/register-environment.yml@mlops-templates
             parameters:
@@ -56,16 +54,10 @@ stages:
               cluster_name: cpu-cluster
               size: Standard_DS3_v2
               min_instances: 0
-              max_instances: 4
+              max_instances: 2
               cluster_tier: low_priority
-          - template: templates/${{ variables.version }}/register-data.yml@mlops-templates
-            parameters:
-              data_type: uri_file
-              data_name: taxi-data
-              data_file: mlops/azureml/train/data.yml
           - template: templates/${{ variables.version }}/run-pipeline.yml@mlops-templates
             parameters:
               pipeline_file: mlops/azureml/train/pipeline.yml
-              experiment_name: $(environment)_taxi_fare_train_$(Build.SourceBranchName)
-              display_name: $(environment)_taxi_fare_run_$(Build.BuildID)
-              enable_monitoring: $(enable_monitoring)
+              experiment_name: taxi-fare-training-$(Build. SourceBranchName)
+              display_name: taxi-fare-run-$(Build.BuildID)
