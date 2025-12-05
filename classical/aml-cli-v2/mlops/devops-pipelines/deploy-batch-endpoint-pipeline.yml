@@ -1,15 +1,21 @@
-# Copyright (c) Microsoft Corporation.  All rights reserved.
+# Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-name: deploy-model-training-pipeline
+name: deploy-online-endpoint-pipeline
 
 variables:
   - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
+      # 'main' branch: PRD environment
       - template: ../../config-infra-prod.yml
   - ${{ if ne(variables['Build.SourceBranchName'], 'main') }}:
+      # 'develop' or feature branches: DEV environment
       - template: ../../config-infra-dev.yml
   - name: version
     value: aml-cli-v2
+  - name: endpoint_name
+    value: taxi-online-$(namespace)$(postfix)$(environment)
+  - name: endpoint_type
+    value: online
 
 trigger: none
 
@@ -18,46 +24,44 @@ pool:
 
 resources:
   repositories:
-    - repository: mlops-templates
+    - repository: mlops-templates # Template Repo
       name: mlops-v2/mlops-templates
       type: git
       ref: main
 
 stages:
-  - stage: DeployTrainingPipeline
-    displayName: Deploy Training Pipeline
+  - stage: CreateOnlineEndpoint
+    displayName: Create/Update Online Endpoint
     jobs:
-      - job: DeployTrainingPipeline
-        timeoutInMinutes: 360
+      - job: DeployOnlineEndpoint
         steps:
           - checkout: self
             path: s/
           - task: Bash@3
-            displayName: "Prevent repos dir warnings"
+            displayName: "Create checkout repository folder(s)"
             inputs:
               targetType: "inline"
               script: |
                 set -e
-                mkdir -p "$(Build.Repository.Name)"
-                mkdir -p "mlops-templates"
+                mkdir "$(Build.Repository.Name)"
+                mkdir "mlops-templates"
           - checkout: mlops-templates
             path: s/templates/
           - template: templates/${{ variables.version }}/install-az-cli.yml@mlops-templates
-          - template: templates/${{ variables. version }}/install-aml-cli.yml@mlops-templates
+          - template: templates/${{ variables.version }}/install-aml-cli.yml@mlops-templates
           - template: templates/${{ variables.version }}/connect-to-workspace.yml@mlops-templates
-          - template: templates/${{ variables.version }}/register-environment.yml@mlops-templates
+          - template: templates/${{ variables.version }}/create-endpoint.yml@mlops-templates
             parameters:
-              environment_name: taxi-train-env
-              environment_file: mlops/azureml/train/train-env.yml
-          - template: templates/${{ variables.version }}/create-compute.yml@mlops-templates
+              endpoint_file: mlops/azureml/deploy/online/online-endpoint.yml
+          - template: templates/${{ variables.version }}/create-deployment.yml@mlops-templates
             parameters:
-              cluster_name: cpu-cluster
-              size: Standard_DS3_v2
-              min_instances: 0
-              max_instances: 2
-              cluster_tier: low_priority
-          - template: templates/${{ variables.version }}/run-pipeline.yml@mlops-templates
+              deployment_name: taxi-online-dp
+              deployment_file: mlops/azureml/deploy/online/online-deployment.yml
+          - template: templates/${{ variables.version }}/allocate-traffic.yml@mlops-templates
             parameters:
-              pipeline_file: mlops/azureml/train/pipeline.yml
-              experiment_name: taxi-fare-training-$(Build. SourceBranchName)
-              display_name: taxi-fare-run-$(Build.BuildID)
+              traffic_allocation: taxi-online-dp=100
+          - template: templates/${{ variables.version }}/test-deployment.yml@mlops-templates
+            parameters:
+              deployment_name: taxi-online-dp
+              sample_request: data/taxi-request.json
+              request_type: json
