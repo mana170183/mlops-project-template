@@ -20,12 +20,12 @@ variables:
 trigger: none
 
 pool:
-  vmImage: ubuntu-20.04
+  vmImage: ubuntu-latest
 
 resources:
   repositories:
     - repository: mlops-templates # Template Repo
-      name: mlops-templates
+      name: mlops-v2/mlops-templates
       type: git
       ref: main
 
