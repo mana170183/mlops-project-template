@@ -4,12 +4,12 @@
 # Prod environment
 variables:
   # Global
-  ap_vm_image: ubuntu-20.04
+  ap_vm_image: ubuntu-latest
 
-  namespace: mlopsv2 #Note: A namespace with many characters will cause storage account creation to fail due to storage account names having a limit of 24 characters.
-  postfix: 0001
-  location: eastus
-  environment: prod
+  namespace: devt #Note: A namespace with many characters will cause storage account creation to fail due to storage account names having a limit of 24 characters.
+  postfix: mlopspoc
+  location: southcentralus
+  environment: mtsprod
   enable_aml_computecluster: true
   enable_monitoring: false
 
