@@ -1,3 +1,22 @@
-{"input_data": [[2.86,40.66551971,-73.98258972,1,40.69801331,-73.97357178,0,2,1,1,19,21,3,56,1,1,19,21,21,57],
-                [3.98,40.68072128,-73.931633,1,40.6909523,-73.99185181,0,2,0,1,4,21,44,11,0,1,4,21,59,35]]
+ {
+  "distance": 10.5,
+  "dropoff_latitude": 40.7580,
+  "dropoff_longitude": -73.9855,
+  "passengers": 1,
+  "pickup_latitude": 40.7489,
+  "pickup_longitude": -73.9680,
+  "pickup_weekday": 3,
+  "pickup_month": 12,
+  "pickup_monthday": 5,
+  "pickup_hour": 10,
+  "pickup_minute": 30,
+  "pickup_second": 0,
+  "dropoff_weekday": 3,
+  "dropoff_month": 12,
+  "dropoff_monthday": 5,
+  "dropoff_hour": 11,
+  "dropoff_minute": 0,
+  "dropoff_second": 0,
+  "store_forward": false,
+  "vendor": "CMT"
 }
